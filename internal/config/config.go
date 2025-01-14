@@ -17,7 +17,7 @@ type Config struct {
 	GRPC      GRPCConf `yaml:"grpc" env-required:"true"`
 	Env       string   `yaml:"env" default:"dev"`
 	App       string   `yaml:"app-name"`
-	StorageDb Storage  `yaml:"db"`
+	StorageDb Storage  `yaml:"storage_path_dev"`
 }
 
 type Storage struct {

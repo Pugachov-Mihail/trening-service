@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	_ "github.com/lib/pq"
 	"log/slog"
 	"time"
 	conf "trening/internal/config"
@@ -17,14 +18,20 @@ type Storage struct {
 func New(storagePath conf.Storage, log *slog.Logger) (*Storage, error) {
 	//TODO при использовании поправить лог
 	log = log.With("connect db", "trening-service")
+
 	connDb := fmt.Sprintf("postgres://" + storagePath.UserDb + ":" + storagePath.PassDb + "@" + storagePath.Host +
 		":" + storagePath.PortDb + "/" + storagePath.DbName + "?sslmode=disable")
-
+	log.Info("Connecting to ", connDb)
 	db, err := sql.Open("postgres", connDb)
+	defer func() {
+		if err := db.Close(); err != nil {
+			panic(err)
+		}
+	}()
 
 	if err = db.Ping(); err != nil {
 		log.Error("Ошибка базы ", err)
-		panic("Ошибка подключения к бд")
+		panic(fmt.Sprintf("Ошибка подключения к бд: %v", err))
 	}
 
 	return &Storage{db: db}, nil

@@ -1,2 +1,5 @@
 .idea
 go.sum
+
+ci/database
+ci/db
