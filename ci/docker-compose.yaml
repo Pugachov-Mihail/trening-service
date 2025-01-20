@@ -21,6 +21,7 @@ services:
     container_name: trening_mc
     depends_on:
       - db
+      - tarantool
     restart: always
     networks:
       - postgres
@@ -28,6 +29,14 @@ services:
       - CONFIG_PATH=./ci/dev.yaml
     ports:
       - "8002:44044"
+
+  tarantool:
+    container_name: tarantool_trening
+    image: tarantool/tarantool
+    ports:
+      - "3301:3301"
+    networks:
+      - postgres
 
 
 networks:
