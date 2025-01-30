@@ -1,0 +1,19 @@
+[build]
+  bin = "./cmd/main"  # Путь к бинарному файлу
+  cmd = "go build -o ./cmd/main ./cmd"
+  delay = 500
+  exclude_dir = ["vendor", "tmp"]
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  kill_delay = "500ms"
+  log = "build-errors.log"
+  send_interrupt = true
+  stop_on_error = true
+
+[color]
+  main = "magenta"
+  watcher = "cyan"
+  build = "yellow"
+  runner = "green"
+
+[log]
+  time = false

@@ -27,10 +27,14 @@ func RegisterTreningServiceApi(grpc *grpc.Server, trening Trening) {
 }
 
 func (t *TreningServiceApi) GetTreningList(ctx context.Context, req *trening_v1.GetTreningListRequest) (*trening_v1.GetTreningListResponse, error) {
-	var limit int32
 	ctx = context.Background()
+
+	var limit int32
+
 	if req.GetPage() == 0 {
 		limit = 10
+	} else {
+		limit = req.GetPage()
 	}
 
 	treningList, err := t.trening.TreningsListService(ctx, limit, req.GetOffset())
@@ -62,6 +66,6 @@ func (t *TreningServiceApi) DeletedTreningUser(ctx context.Context, req *trening
 	panic("implement me")
 }
 
-func (t *TreningServiceApi) GetCurrentTrening(context.Context, *trening_v1.TreningIdRequest) (*trening_v1.GetCurrentTreningResponse, error) {
+func (t *TreningServiceApi) GetCurrentTrening(ctx context.Context, req *trening_v1.TreningIdRequest) (*trening_v1.GetCurrentTreningResponse, error) {
 	panic("implement me")
 }

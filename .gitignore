@@ -3,3 +3,6 @@ go.sum
 
 ci/database
 ci/db
+ci/tarantool
+
+tmp

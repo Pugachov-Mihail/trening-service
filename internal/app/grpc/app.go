@@ -6,7 +6,8 @@ import (
 	"trening/internal/app"
 	"trening/internal/config"
 	"trening/internal/service"
-	"trening/internal/source"
+	"trening/internal/source/posgres"
+	"trening/internal/source/tarantool"
 )
 
 type App struct {
@@ -14,12 +15,17 @@ type App struct {
 }
 
 func New(log *slog.Logger, port int, cfg config.Config) *App {
-	store, err := source.New(cfg.StorageDb, log)
+	store, err := posgres.New(cfg.StorageDb, log)
 	if err != nil {
 		panic("Failed to create store: " + fmt.Sprint(err))
 	}
 
-	treningService := service.New(log, cfg.GRPC.TokenTTL, cfg, store)
+	tstore, err := tarantool.NewTarantoolStorage(cfg.TarantoolDB, log)
+	if err != nil {
+		panic("Failed to create store: " + fmt.Sprint(err))
+	}
+
+	treningService := service.New(log, cfg.GRPC.TokenTTL, cfg, store, tstore)
 	trening := app.New(log, port, cfg.App, treningService)
 
 	return &App{GRPC: trening}

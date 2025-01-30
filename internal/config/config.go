@@ -14,10 +14,11 @@ const (
 )
 
 type Config struct {
-	GRPC      GRPCConf `yaml:"grpc" env-required:"true"`
-	Env       string   `yaml:"env" default:"dev"`
-	App       string   `yaml:"app-name"`
-	StorageDb Storage  `yaml:"storage_path_dev"`
+	GRPC        GRPCConf  `yaml:"grpc" env-required:"true"`
+	Env         string    `yaml:"env" default:"dev"`
+	App         string    `yaml:"app-name"`
+	StorageDb   Storage   `yaml:"storage_path_dev"`
+	TarantoolDB Tarantool `yaml:"tarantool_db"`
 }
 
 type Storage struct {
@@ -26,6 +27,13 @@ type Storage struct {
 	DbName string `yaml:"POSTGRES_DB"`
 	PassDb string `yaml:"POSTGRES_PASSWORD"`
 	PortDb string `yaml:"POSTGRES_PORT"`
+}
+
+type Tarantool struct {
+	UserDb string `yaml:"TARANTOOL_USER"`
+	PassDb string `yaml:"TARANTOOL_PASS"`
+	PortDb string `yaml:"TARANTOOL_PORT"`
+	HostDb string `yaml:"TARANTOOL_HOST"`
 }
 
 type GRPCConf struct {

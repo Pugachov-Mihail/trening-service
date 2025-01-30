@@ -14,7 +14,10 @@ type Trening struct {
 	TokenTTl time.Duration
 	Cfg      config.Config
 	Store    TreningStorage
+	TStore   TreningStorage
 }
+
+//go:generate mockgen -source=trening.go -destination=mocks/trening_mock.go -package=mocks
 
 type TreningStorage interface {
 	TreningListSourse(ctx context.Context, page, offset int32, log *slog.Logger) ([]trening_v1.GetTreningList, error)
@@ -25,23 +28,30 @@ type TreningStorage interface {
 }
 
 // New сервисный слой Trening
-func New(log *slog.Logger, ttl time.Duration, cfg config.Config, store TreningStorage) *Trening {
-	return &Trening{Log: log, TokenTTl: ttl, Cfg: cfg, Store: store}
+func New(log *slog.Logger, ttl time.Duration, cfg config.Config, storeDb TreningStorage, storeTarant TreningStorage) *Trening {
+	return &Trening{Log: log, TokenTTl: ttl, Cfg: cfg, Store: storeDb, TStore: storeTarant}
 }
 
 func (t *Trening) TreningsListService(ctx context.Context, page, offset int32) ([]*trening_v1.GetTreningList, error) {
 	log := t.Log.With("trening-list", "trening-list service")
-
-	value, err := t.Store.TreningListSourse(ctx, page, offset, log)
-	if err != nil {
-		log.Error(fmt.Sprintf("trening list get store: %s", err))
-		return nil, fmt.Errorf("treningList: %w", err)
-	}
-
 	var treningList []*trening_v1.GetTreningList
 
-	for _, v := range value {
-		treningList = append(treningList, &v)
+	res, err := t.TStore.TreningListSourse(ctx, page, offset, log)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(res) == 0 {
+
+		value, err := t.Store.TreningListSourse(ctx, page, offset, log)
+		if err != nil {
+			log.Error(fmt.Sprintf("trening list get store: %s", err))
+			return nil, fmt.Errorf("treningList: %w", err)
+		}
+
+		for _, v := range value {
+			treningList = append(treningList, &v)
+		}
 	}
 
 	log.Info("trening list return result")

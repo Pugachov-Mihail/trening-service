@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 services:
   db:
@@ -22,13 +22,19 @@ services:
     depends_on:
       - db
       - tarantool
-    restart: always
+    volumes:
+      - ../:/app
     networks:
       - postgres
     environment:
       - CONFIG_PATH=./ci/dev.yaml
+      - AIR_ENV=development
     ports:
       - "8002:44044"
+#      - "2345:2345"
+    command:
+      - air
+#      - dlv exec /app/myapp --headless --listen=:2345 --api-version=2 --accept-multiclient
 
   tarantool:
     container_name: tarantool_trening
@@ -37,7 +43,18 @@ services:
       - "3301:3301"
     networks:
       - postgres
+    volumes:
+      - ./tarantool/init.lua:/opt/tarantool/init.lua  # Монтируем скрипт в контейнер
+      - tarantool_data:/var/lib/tarantool
+    environment:
+      TARANTOOL_USER_NAME: "admin"
+      TARANTOOL_USER_PASSWORD: "password"
+      TARANTOOL_HOST: tarantool
+      TARANTOOL_PORT: 3301
+    command: tarantool /opt/tarantool/init.lua
 
+volumes:
+  tarantool_data:
 
 networks:
   postgres:

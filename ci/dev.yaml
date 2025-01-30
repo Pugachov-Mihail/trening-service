@@ -17,5 +17,11 @@ grpc:
   port: 44044
   timeout: 1h
 
+tarantool_db:
+  TARANTOOL_USER: "myuser"
+  TARANTOOL_PASS: "password"
+  TARANTOOL_PORT: "3301"
+  TARANTOOL_HOST: "tarantool"
+
 secret: "add"
 tokenTTL: 1h

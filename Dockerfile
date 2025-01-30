@@ -1,13 +1,24 @@
-FROM golang:1.23
+FROM golang:1.23-alpine
 
-WORKDIR app
+# Устанавливаем рабочую директорию внутри контейнера
+WORKDIR /app
 
+# Копируем файлы go.mod и go.sum (если они есть) для установки зависимостей
 COPY go.mod go.sum ./
 
-RUN go mod download && go mod verify
+# Устанавливаем зависимости
+RUN go mod download
 
-COPY . ./
+# Копируем весь проект в рабочую директорию
+COPY . .
 
-RUN go build ./cmd/main.go
+#EXPOSE "44044"
 
-CMD ["./main"]
+# Устанавливаем air для горячей перезагрузки при разработке
+RUN go install github.com/air-verse/air@latest
+
+# Устанавливаем delve для отладки
+#RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+# Команда для запуска приложения с использованием air для горячей перезагрузки
+CMD ["air"]
