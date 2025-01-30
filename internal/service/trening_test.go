@@ -1,11 +1,10 @@
-package test
+package service
 
 import (
 	"context"
 	"go.uber.org/mock/gomock"
 	"log/slog"
 	"testing"
-	"trening/internal/service"
 	"trening/internal/service/mocks"
 	trening_v1 "trening/protos/gen/trening.v1"
 )
@@ -24,7 +23,7 @@ func TestTreningService(t *testing.T) {
 		Return([]trening_v1.GetTreningList{}, nil).
 		Times(2)
 
-	trening := service.Trening{Store: mockTrening, TStore: mockTrening, Log: log}
+	trening := Trening{Store: mockTrening, TStore: mockTrening, Log: log}
 
 	result, err := trening.TreningsListService(ctx, 100, 0)
 

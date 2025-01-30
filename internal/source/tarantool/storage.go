@@ -56,7 +56,6 @@ func (t TarantoolStorage) TreningListSourse(ctx context.Context, page, offset in
 	resp, err := t.db.Do(res).Get()
 	if err != nil {
 		log.Error("Error getting data", "error", err)
-		return nil, err
 	}
 
 	var result []trening_v1.GetTreningList

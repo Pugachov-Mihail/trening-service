@@ -44,7 +44,7 @@ services:
     networks:
       - postgres
     volumes:
-      - ./tarantool/init.lua:/opt/tarantool/init.lua  # Монтируем скрипт в контейнер
+      - ./tarantool/init.lua:/opt/tarantool/init.lua
       - tarantool_data:/var/lib/tarantool
     environment:
       TARANTOOL_USER_NAME: "admin"
