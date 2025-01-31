@@ -15,7 +15,7 @@ type App struct {
 }
 
 func New(log *slog.Logger, port int, cfg config.Config) *App {
-	store, err := posgres.New(cfg.StorageDb, log)
+	store, err := posgres.NewStorage(cfg.StorageDb, log)
 	if err != nil {
 		panic("Failed to create store: " + fmt.Sprint(err))
 	}

@@ -7,6 +7,8 @@ import (
 	_ "github.com/tarantool/go-tarantool/v2/datetime"
 	_ "github.com/tarantool/go-tarantool/v2/decimal"
 	_ "github.com/tarantool/go-tarantool/v2/uuid"
+	"trening/internal/source/posgres"
+
 	"log/slog"
 	"time"
 	"trening/internal/config"
@@ -85,4 +87,31 @@ func (t TarantoolStorage) DeletedTreningUserService(ctx context.Context, idTreni
 func (t TarantoolStorage) GetUserTreningService(ctx context.Context, userId int64, log *slog.Logger) ([]trening_v1.GetTreningList, error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func (t *TarantoolStorage) SyncData(storage *posgres.Storage, logger *slog.Logger, ctx context.Context) {
+	log := logger.With("TorantoolStorage", "sync")
+
+	res, err := storage.DataForSync(ctx, log)
+
+	for _, r := range res {
+		var tuple = []interface{}{
+			r.Id,
+			r.Titile,
+			r.Descriptions,
+			r.Image,
+			r.Price,
+			r.FirstName,
+			r.LastName,
+		}
+		req := tarantool.NewInsertRequest("trenning").
+			Tuple(tuple)
+		_, err = t.db.Do(req).Get()
+		if err != nil {
+			log.Warn("Error getting data", "error", err)
+			return
+		}
+	}
+
+	log.Info("TorantoolStorage sync complete")
 }

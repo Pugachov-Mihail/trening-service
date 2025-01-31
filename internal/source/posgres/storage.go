@@ -15,7 +15,7 @@ type Storage struct {
 	db *sql.DB
 }
 
-func New(storagePath conf.Storage, log *slog.Logger) (*Storage, error) {
+func NewStorage(storagePath conf.Storage, log *slog.Logger) (*Storage, error) {
 	//TODO при использовании поправить лог
 	log = log.With("connect db", "trening-service")
 
@@ -185,6 +185,67 @@ func (s *Storage) GetUserTreningService(ctx context.Context, userId int64, log *
 	if err = row.Scan(result); err != nil {
 		log.Error("Error scanning row", "error", err)
 		return nil, err
+	}
+
+	return result, nil
+}
+
+func (s *Storage) DataForSync(ctx context.Context, log *slog.Logger) ([]struct {
+	Id           int
+	Titile       string
+	Descriptions string
+	Image        string
+	Price        float64
+	FirstName    string
+	LastName     string
+}, error) {
+	var result []struct {
+		Id           int
+		Titile       string
+		Descriptions string
+		Image        string
+		Price        float64
+		FirstName    string
+		LastName     string
+	}
+
+	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(dbCtx, `select * from trening_dm.GetProgramm(_limit := $1, _offset := $2 );`, 1000, 0)
+
+	if err != nil {
+		log.Warn("Error during iteration Storage", "error", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Error("Error closing rows", "error", err)
+		}
+	}()
+
+	for rows.Next() {
+		//Дополнить proto trening_v1.GetTreningList
+		var res struct {
+			Id           int
+			Titile       string
+			Descriptions string
+			Image        string
+			Price        float64
+			FirstName    string
+			LastName     string
+		}
+		if err = rows.Scan(&res.Id, &res.Titile,
+			&res.Descriptions, &res.Image,
+			&res.Price, &res.FirstName,
+			&res.LastName); err != nil {
+			log.Error("Error scanning row", "error", err)
+		}
+
+		result = append(result, res)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Error("Error during iteration", "error", err)
 	}
 
 	return result, nil

@@ -42,7 +42,7 @@ func (t *Trening) TreningsListService(ctx context.Context, page, offset int32) (
 	}
 
 	if len(res) == 0 {
-
+		log.Debug("Tarantool empty response")
 		value, err := t.Store.TreningListSourse(ctx, page, offset, log)
 		if err != nil {
 			log.Error(fmt.Sprintf("trening list get store: %s", err))

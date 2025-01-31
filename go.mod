@@ -16,6 +16,7 @@ require (
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/tarantool/go-iproto v1.1.0 // indirect

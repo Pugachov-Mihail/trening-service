@@ -5,7 +5,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"log/slog"
 	"testing"
-	"trening/internal/service/mocks"
+	"trening/internal/mocks"
 	trening_v1 "trening/protos/gen/trening.v1"
 )
 
