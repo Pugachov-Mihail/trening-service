@@ -31,7 +31,7 @@ func NewTarantoolStorage(config config.Tarantool, logger *slog.Logger) (*Taranto
 		Password: config.PassDb,
 	}
 
-	opt := tarantool.Opts{Timeout: time.Second}
+	opt := tarantool.Opts{}
 
 	conn, err := tarantool.Connect(ctx, dialer, opt)
 
@@ -44,28 +44,46 @@ func NewTarantoolStorage(config config.Tarantool, logger *slog.Logger) (*Taranto
 }
 
 func (t TarantoolStorage) TreningListSourse(ctx context.Context, page, offset int32, log *slog.Logger) ([]trening_v1.GetTreningList, error) {
-	defer func() {
-		if err := t.db.Close(); err != nil {
-			log.Error("Error closing connection", "error", err)
-		}
-	}()
-
+	type resStruct struct {
+		Id           int
+		Titile       string
+		Descriptions string
+		Image        string
+		Price        float64
+		FirstName    string
+		LastName     string
+	}
+	// Создаем запрос на выборку данных
 	res := tarantool.NewSelectRequest("trenning").
 		Limit(uint32(page)).
-		Offset(uint32(offset)).
-		Iterator(tarantool.IterAll)
+		Offset(uint32(offset))
 
-	resp, err := t.db.Do(res).Get()
+	data := []resStruct{}
+
+	// Выполняем запрос
+	err := t.db.Do(res).GetTyped(&data)
 	if err != nil {
 		log.Error("Error getting data", "error", err)
+		return nil, err
 	}
 
 	var result []trening_v1.GetTreningList
-	var name []interface{}
 
-	for _, v := range resp {
-		name = append(name, v)
+	for _, v := range data {
+		result = append(result, trening_v1.GetTreningList{
+			Id:          int64(v.Id),
+			Title:       v.Titile,
+			Description: v.Descriptions,
+			Image:       v.Image,
+			TrenerInfo: &trening_v1.Trener{
+				LastName: v.LastName,
+				Name:     v.FirstName,
+			},
+		})
 	}
+
+	log.Debug("tarantool get result")
+
 	return result, nil
 }
 
@@ -95,17 +113,16 @@ func (t *TarantoolStorage) SyncData(storage *posgres.Storage, logger *slog.Logge
 	res, err := storage.DataForSync(ctx, log)
 
 	for _, r := range res {
-		var tuple = []interface{}{
-			r.Id,
-			r.Titile,
-			r.Descriptions,
-			r.Image,
-			r.Price,
-			r.FirstName,
-			r.LastName,
-		}
 		req := tarantool.NewInsertRequest("trenning").
-			Tuple(tuple)
+			Tuple([]interface{}{
+				r.Id,
+				r.Titile,
+				r.Descriptions,
+				r.Image,
+				r.Price,
+				r.FirstName,
+				r.LastName,
+			})
 		_, err = t.db.Do(req).Get()
 		if err != nil {
 			log.Warn("Error getting data", "error", err)

@@ -54,6 +54,10 @@ func (t *Trening) TreningsListService(ctx context.Context, page, offset int32) (
 		}
 	}
 
+	for _, v := range res {
+		treningList = append(treningList, &v)
+	}
+
 	log.Info("trening list return result")
 
 	return treningList, nil
