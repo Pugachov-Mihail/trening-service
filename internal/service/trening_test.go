@@ -34,5 +34,10 @@ func TestTreningService(t *testing.T) {
 	if len(result) != 0 {
 		t.Errorf("len(result) = %d, want %d", len(result), 0)
 	}
+}
 
+func BenchmarkName(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+
+	}
 }

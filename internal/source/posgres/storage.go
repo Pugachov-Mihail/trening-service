@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 	conf "trening/internal/config"
+	"trening/internal/source"
 	trening_v1 "trening/protos/gen/trening.v1"
 )
 
@@ -54,15 +55,8 @@ func (s *Storage) TreningListSourse(ctx context.Context, page, offset int32, log
 
 	for rows.Next() {
 		//Дополнить proto trening_v1.GetTreningList
-		var result struct {
-			Id           int
-			Titile       string
-			Descriptions string
-			Image        string
-			Price        float64
-			FirstName    string
-			LastName     string
-		}
+		var result source.Trenings
+
 		if err = rows.Scan(&result.Id, &result.Titile,
 			&result.Descriptions, &result.Image,
 			&result.Price, &result.FirstName,
