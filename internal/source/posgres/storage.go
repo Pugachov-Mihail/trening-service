@@ -40,7 +40,9 @@ func (s *Storage) TreningListSourse(ctx context.Context, page, offset int32, log
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(dbCtx, `select * from trening_dm.GetProgramm(_limit := $1, _offset := $2 );`, page, offset)
+	rows, err := s.db.QueryContext(dbCtx,
+		`select * from trening_dm.Get_Programm(_limit := $1, _offset := $2 );`,
+		page, offset)
 
 	if err != nil {
 		return nil, fmt.Errorf("query context error: %w", err)
@@ -60,21 +62,16 @@ func (s *Storage) TreningListSourse(ctx context.Context, page, offset int32, log
 		if err = rows.Scan(&result.Id, &result.Titile,
 			&result.Descriptions, &result.Image,
 			&result.Price, &result.FirstName,
-			&result.LastName); err != nil {
+			&result.LastName, &result.Data); err != nil {
 			log.Error("Error scanning row", "error", err)
 			return nil, fmt.Errorf("scan error: %w", err)
 		}
 
-		res = append(res, trening_v1.GetTreningList{
-			Id:          int64(result.Id),
-			Title:       result.Titile,
-			Description: result.Descriptions,
-			Image:       result.Image,
-			TrenerInfo: &trening_v1.Trener{
-				LastName: result.LastName,
-				Name:     result.FirstName,
-			},
-		})
+		if err := result.UnmarshalExercise(); err != nil {
+			log.Error("Error unmarshaling exercise", "error", err)
+		}
+
+		res = append(res, result.ReturnsResult(log))
 	}
 
 	if err := rows.Err(); err != nil {
@@ -184,29 +181,13 @@ func (s *Storage) GetUserTreningService(ctx context.Context, userId int64, log *
 	return result, nil
 }
 
-func (s *Storage) DataForSync(ctx context.Context, log *slog.Logger) ([]struct {
-	Id           int
-	Titile       string
-	Descriptions string
-	Image        string
-	Price        float64
-	FirstName    string
-	LastName     string
-}, error) {
-	var result []struct {
-		Id           int
-		Titile       string
-		Descriptions string
-		Image        string
-		Price        float64
-		FirstName    string
-		LastName     string
-	}
+func (s *Storage) DataForSync(ctx context.Context, log *slog.Logger) ([]source.Trenings, error) {
+	var result []source.Trenings
 
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(dbCtx, `select * from trening_dm.GetProgramm(_limit := $1, _offset := $2 );`, 1000, 0)
+	rows, err := s.db.QueryContext(dbCtx, `select * from trening_dm.Get_Programm(_limit := $1, _offset := $2 );`, 1000, 0)
 
 	if err != nil {
 		log.Warn("Error during iteration Storage", "error", err)
@@ -219,20 +200,17 @@ func (s *Storage) DataForSync(ctx context.Context, log *slog.Logger) ([]struct {
 
 	for rows.Next() {
 		//Дополнить proto trening_v1.GetTreningList
-		var res struct {
-			Id           int
-			Titile       string
-			Descriptions string
-			Image        string
-			Price        float64
-			FirstName    string
-			LastName     string
-		}
+		var res source.Trenings
+
 		if err = rows.Scan(&res.Id, &res.Titile,
 			&res.Descriptions, &res.Image,
 			&res.Price, &res.FirstName,
-			&res.LastName); err != nil {
+			&res.LastName, &res.Data); err != nil {
 			log.Error("Error scanning row", "error", err)
+		}
+
+		if err = res.UnmarshalExercise(); err != nil {
+			log.Error("Error unmarshaling exercise", "error", err)
 		}
 
 		result = append(result, res)

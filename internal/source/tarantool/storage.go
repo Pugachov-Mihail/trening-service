@@ -121,23 +121,5 @@ func (t *TarantoolStorage) SyncData(storage *posgres.Storage, logger *slog.Logge
 		return
 	}
 
-	//for _, r := range res {
-	//	req := tarantool.NewInsertRequest("add_trennings_if_not_exist").
-	//		Tuple([]interface{}{
-	//			r.Id,
-	//			r.Titile,
-	//			r.Descriptions,
-	//			r.Image,
-	//			r.Price,
-	//			r.FirstName,
-	//			r.LastName,
-	//		})
-	//	_, err = t.db.Do(req).Get()
-	//	if err != nil {
-	//		log.Warn("Error getting data", "error", err)
-	//		return
-	//	}
-	//}
-
 	log.Info("TorantoolStorage sync complete")
 }

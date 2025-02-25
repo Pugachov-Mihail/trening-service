@@ -33,7 +33,7 @@ message GetTreningList {
   string image = 4;
   float  raiting = 5;
   Trener trenerInfo = 6;
-  repeated TrenningInfo trenningInfo = 7;
+  repeated Exercise trenningInfo = 7;
 }
 
 message GetCurrentTreningResponse {
@@ -43,7 +43,7 @@ message GetCurrentTreningResponse {
   string image = 4;
   float  raiting = 5;
   Trener trenerInfo = 6;
-  repeated TrenningInfo trenningInfo = 7;
+  repeated Exercise trenningInfo = 7;
 }
 
 message Trener {
@@ -51,12 +51,19 @@ message Trener {
   string lastName = 2;
 }
 
-message TrenningInfo {
+message Exercise {
   string title = 1;
   string avatar = 2;
-  repeated int32 approach = 3;
+  string video = 3;
+  string description = 4;
+  repeated Approach approach = 5;
 }
 
+message Approach {
+ float Weigth = 1;
+ int32 Repeat = 2;
+ int64 Rest = 3;
+}
 // GetCurrentTrening
 message TreningIdRequest {
   int64 id = 1;
