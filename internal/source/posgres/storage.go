@@ -35,7 +35,6 @@ func NewStorage(storagePath conf.Storage, log *slog.Logger) (*Storage, error) {
 	return &Storage{db: db}, nil
 }
 
-// TODO переписать возвращаемый результат
 func (s *Storage) TreningListSourse(ctx context.Context, page, offset int32, log *slog.Logger) ([]trening_v1.GetTreningList, error) {
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
@@ -56,7 +55,6 @@ func (s *Storage) TreningListSourse(ctx context.Context, page, offset int32, log
 	var res []trening_v1.GetTreningList
 
 	for rows.Next() {
-		//Дополнить proto trening_v1.GetTreningList
 		var result source.Trenings
 
 		if err = rows.Scan(&result.Id, &result.Titile,
@@ -71,7 +69,7 @@ func (s *Storage) TreningListSourse(ctx context.Context, page, offset int32, log
 			log.Error("Error unmarshaling exercise", "error", err)
 		}
 
-		res = append(res, result.ReturnsResult(log))
+		res = append(res, result.ReturnsResult())
 	}
 
 	if err := rows.Err(); err != nil {
@@ -86,7 +84,11 @@ func (s *Storage) AddTreningSourse(ctx context.Context, idTrening, userId int64,
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	row, err := s.db.QueryContext(dbCtx, "")
+	row, err := s.db.QueryContext(dbCtx,
+		`SELECT * FROM trening_dm.Add_Current_Trening_For_User(_programm_id := $1, _user_id := $2);`,
+		idTrening, userId,
+	)
+
 	defer func() {
 		if err := row.Close(); err != nil {
 			log.Error("Error closing connect", "error", err)
@@ -99,9 +101,25 @@ func (s *Storage) AddTreningSourse(ctx context.Context, idTrening, userId int64,
 
 	var result []trening_v1.GetTreningList
 
-	if err = row.Scan(result); err != nil {
+	for row.Next() {
+		var res source.Trenings
+
+		if err = row.Scan(&res.Id, &res.Titile,
+			&res.Descriptions, &res.Image, &res.FirstName,
+			&res.LastName, &res.Data); err != nil {
+			log.Error("Error scanning row", "error", err)
+			return nil, err
+		}
+
+		if err := res.UnmarshalExercise(); err != nil {
+			log.Error("Error unmarshaling exercise", "error", err)
+		}
+
+		result = append(result, res.ReturnsResult())
+	}
+
+	if err = row.Err(); err != nil {
 		log.Error("Error scanning row", "error", err)
-		return nil, err
 	}
 
 	return result, nil
@@ -111,7 +129,9 @@ func (s *Storage) GetCurrentTreningService(ctx context.Context, idTrening, userI
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	row, err := s.db.QueryContext(dbCtx, "")
+	row, err := s.db.QueryContext(dbCtx,
+		`SELECT * FROM  trening_dm.Get_Current_Trening(_programm_id := $1)`,
+		idTrening)
 	defer func() {
 		if err := row.Close(); err != nil {
 			log.Error("Error closing connect", "error", err)
@@ -122,20 +142,31 @@ func (s *Storage) GetCurrentTreningService(ctx context.Context, idTrening, userI
 		return trening_v1.GetTreningList{}, err
 	}
 
-	var result trening_v1.GetTreningList
+	var res source.Trenings
 
-	if err = row.Scan(result); err != nil {
-		log.Error("Error scanning row", "error", err)
-		return trening_v1.GetTreningList{}, err
+	for row.Next() {
+		if err = row.Scan(&res.Id, &res.Titile,
+			&res.Descriptions, &res.Image, &res.FirstName,
+			&res.LastName, &res.Data); err != nil {
+			log.Error("Error scanning row", "error", err)
+			return trening_v1.GetTreningList{}, err
+		}
+		if err := res.UnmarshalExercise(); err != nil {
+			log.Error("Error unmarshaling exercise", "error", err)
+		}
 	}
 
-	return result, nil
+	return res.ReturnsResult(), nil
 }
+
 func (s *Storage) DeletedTreningUserService(ctx context.Context, idTrening, userId int64, log *slog.Logger) ([]trening_v1.GetTreningList, error) {
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	row, err := s.db.QueryContext(dbCtx, "")
+	row, err := s.db.QueryContext(dbCtx,
+		`SELECT * FROM trening_dm.Delete_Programm_User(_programm_id := $1, _user_id := $2);`,
+		idTrening, userId,
+	)
 	defer func() {
 		if err := row.Close(); err != nil {
 			log.Error("Error closing connect", "error", err)
@@ -148,9 +179,25 @@ func (s *Storage) DeletedTreningUserService(ctx context.Context, idTrening, user
 
 	var result []trening_v1.GetTreningList
 
-	if err = row.Scan(result); err != nil {
+	for row.Next() {
+		var res source.Trenings
+
+		if err = row.Scan(&res.Id, &res.Titile,
+			&res.Descriptions, &res.Image, &res.Data); err != nil {
+			log.Error("Error scanning row", "error", err)
+			return nil, err
+		}
+
+		if err := res.UnmarshalExercise(); err != nil {
+			log.Error("Error unmarshaling exercise", "error", err)
+		}
+
+		result = append(result, res.ReturnsResult())
+
+	}
+
+	if err = row.Err(); err != nil {
 		log.Error("Error scanning row", "error", err)
-		return nil, err
 	}
 
 	return result, nil
@@ -160,7 +207,9 @@ func (s *Storage) GetUserTreningService(ctx context.Context, userId int64, log *
 	dbCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	row, err := s.db.QueryContext(dbCtx, "")
+	row, err := s.db.QueryContext(dbCtx,
+		`select * from trening_dm.Get_User_Trenings(_user_id := $1);`,
+		userId)
 	defer func() {
 		if err := row.Close(); err != nil {
 			log.Error("Error closing connect", "error", err)
@@ -173,9 +222,25 @@ func (s *Storage) GetUserTreningService(ctx context.Context, userId int64, log *
 
 	var result []trening_v1.GetTreningList
 
-	if err = row.Scan(result); err != nil {
+	for row.Next() {
+		var res source.Trenings
+
+		if err = row.Scan(&res.Id, &res.Titile,
+			&res.Descriptions, &res.Image, &res.Data); err != nil {
+			log.Error("Error scanning row", "error", err)
+			return nil, err
+		}
+
+		if err := res.UnmarshalExercise(); err != nil {
+			log.Error("Error unmarshaling exercise", "error", err)
+		}
+
+		result = append(result, res.ReturnsResult())
+
+	}
+
+	if err = row.Err(); err != nil {
 		log.Error("Error scanning row", "error", err)
-		return nil, err
 	}
 
 	return result, nil

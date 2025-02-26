@@ -2,20 +2,18 @@ package source
 
 import (
 	"encoding/json"
-	"fmt"
-	"log/slog"
 	trening_v1 "trening/protos/gen/trening.v1"
 )
 
 type Trenings struct {
-	Id           int
-	Titile       string
-	Descriptions string
-	Image        string
-	Price        float64
-	mdate        string
-	FirstName    string
-	LastName     string
+	Id           int     `json:"id"`
+	Titile       string  `json:"titile"`
+	Descriptions string  `json:"description"`
+	Image        string  `json:"image"`
+	Price        float64 `json:"price,omitempty"`
+	Mdate        string  `json:"mdate"`
+	FirstName    string  `json:"first_name"`
+	LastName     string  `json:"last_name"`
 	Exercise     []Exercise
 	Data         []uint8 `json:"exercise"`
 }
@@ -47,19 +45,18 @@ func (t *Trenings) UnmarshalExercise() error {
 	return nil
 }
 
-func (t *Trenings) ReturnsResult(logger *slog.Logger) trening_v1.GetTreningList {
+func (t *Trenings) ReturnsResult() trening_v1.GetTreningList {
 	var exercise []*trening_v1.Exercise
 	var approach []*trening_v1.Approach
 
-	for _, ex := range t.Exercise {
-		for _, a := range ex.Approach {
+	for i, ex := range t.Exercise {
+		for _, a := range t.Exercise[i].Approach {
 			approach = append(approach, &trening_v1.Approach{
 				Weigth: a.Weigth,
 				Repeat: a.Repeat,
 				Rest:   a.Rest,
 			})
 		}
-		logger.Info("Approach data:", "approach", fmt.Sprintf("%+v", approach))
 
 		exercise = append(exercise,
 			&trening_v1.Exercise{

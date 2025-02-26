@@ -38,6 +38,7 @@ func (t *Trening) Result(res []trening_v1.GetTreningList) []*trening_v1.GetTreni
 	for _, v := range res {
 		treningList = append(treningList, &v)
 	}
+
 	return treningList
 }
 
@@ -117,13 +118,5 @@ func (t *Trening) GetCurrentTreningService(ctx context.Context, idTrening, id in
 
 	log.Info("delete-user-trening service return result")
 
-	return trening_v1.GetTreningList{
-		Id:           value.Id,
-		Title:        value.Title,
-		Description:  value.Description,
-		Image:        value.Image,
-		TrenningInfo: value.TrenningInfo,
-		TrenerInfo:   value.TrenerInfo,
-		Raiting:      value.Raiting,
-	}, nil
+	return value, nil
 }

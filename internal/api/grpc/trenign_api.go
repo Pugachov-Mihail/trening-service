@@ -59,13 +59,45 @@ func (t *TreningServiceApi) AddTreningUser(ctx context.Context, req *trening_v1.
 }
 
 func (t *TreningServiceApi) GetUserTrenings(ctx context.Context, req *trening_v1.AddTreningRequest) (*trening_v1.GetTreningListResponse, error) {
-	panic("implement me")
+	if req.GetUserId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "UserId is required")
+	}
+	res, err := t.trening.GetUserTreningService(ctx, req.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("GetUserTreningService: %v", err))
+	}
+	return &trening_v1.GetTreningListResponse{TreningList: res}, nil
 }
 
 func (t *TreningServiceApi) DeletedTreningUser(ctx context.Context, req *trening_v1.AddTreningRequest) (*trening_v1.GetTreningListResponse, error) {
-	panic("implement me")
+	if req.GetUserId() == 0 || req.GetId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "UserId is required")
+	}
+
+	res, err := t.trening.DeletedTreningUserService(ctx, req.GetId(), req.GetUserId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("DeletedTreningUser: %v", err))
+	}
+	return &trening_v1.GetTreningListResponse{TreningList: res}, nil
 }
 
 func (t *TreningServiceApi) GetCurrentTrening(ctx context.Context, req *trening_v1.TreningIdRequest) (*trening_v1.GetCurrentTreningResponse, error) {
-	panic("implement me")
+	if req.GetId() == 0 {
+		return nil, status.Error(codes.InvalidArgument, "ProgrammId is required")
+	}
+
+	res, err := t.trening.GetCurrentTreningService(ctx, req.GetId(), req.GetId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("GetCurrentTreningService: %v", err))
+	}
+
+	return &trening_v1.GetCurrentTreningResponse{
+		Id:           res.Id,
+		Title:        res.Title,
+		Image:        res.Image,
+		Description:  res.Description,
+		Raiting:      res.Raiting,
+		TrenningInfo: res.TrenningInfo,
+		TrenerInfo:   res.TrenerInfo,
+	}, nil
 }
