@@ -198,6 +198,7 @@ func (s *Storage) DeletedTreningUserService(ctx context.Context, idTrening, user
 
 	if err = row.Err(); err != nil {
 		log.Error("Error scanning row", "error", err)
+		return nil, err
 	}
 
 	return result, nil
